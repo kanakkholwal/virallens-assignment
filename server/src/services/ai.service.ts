@@ -6,7 +6,7 @@ const openrouter = createOpenRouter({
     apiKey: config.openRouterApiKey,
 });
 
-const MODEL = process.env.AI_MODEL || 'liquid/lfm-2.5-1.2b-instruct:free';
+const MODEL = config.aiModel;
 
 export const streamAIResponse = (userMessage: string) => {
     return streamText({

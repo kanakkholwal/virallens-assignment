@@ -8,7 +8,7 @@ const envVariables = z.object({
     MONGO_URI: z.string().nonempty(),
     JWT_SECRET: z.string().nonempty(),
     OPENROUTER_API_KEY: z.string().nonempty(),
-    AI_MODEL: z.string().nonempty(),
+    AI_MODEL: z.string().nonempty().default("'liquid/lfm-2.5-1.2b-instruct:free'"),
     NODE_ENV: z.string().default("development"),
 });
 
@@ -27,6 +27,7 @@ const config = {
     mongoUri: process.env.MONGO_URI,
     jwtSecret: process.env.JWT_SECRET,
     openRouterApiKey: process.env.OPENROUTER_API_KEY,
+    aiModel: process.env.AI_MODEL
 };
 
 

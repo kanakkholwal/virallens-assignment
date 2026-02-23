@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { code } from '@streamdown/code';
+import axios from 'axios';
 import { Bot, LogOut, Send } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -33,24 +34,32 @@ export default function Chat() {
     };
 
     useEffect(() => {
+        const controller = new AbortController();
+
         const fetchHistory = async () => {
             try {
-                const res = await api.get('/chat/history')
-                const data = res.data;
-                setMessages(data);
+                const res = await api.get('/chat/history', {
+                    signal: controller.signal,
+                });
+                setMessages(res.data);
             } catch (e: any) {
-                console.error("Failed to fetch chat history:", e)
-                toast.error(e.response?.data?.message || "Failed to fetch chat history")
+                if (axios.isCancel(e) || e?.code === 'ERR_CANCELED') return;
+                console.error('Failed to fetch chat history:', e);
+                toast.error(e.response?.data?.message || 'Failed to fetch chat history');
             }
         };
+
         fetchHistory();
+
+
+        return () => controller.abort();
     }, []);
 
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
 
-    const handleSend = async (e: React.SubmitEvent) => {
+    const handleSend = async (e: React.FormEvent | React.KeyboardEvent) => {
         e.preventDefault();
         if (!input.trim() || isSending) return;
 
@@ -253,12 +262,19 @@ export default function Chat() {
                 <div className="mx-auto w-full max-w-3xl">
                     <form onSubmit={handleSend} className="flex items-center gap-2">
                         <Textarea
-                            className="flex-1 rounded-xl py-5 text-sm"
-                            placeholder="Type your message…"
-                            rows={5}
+                            className="flex-1 rounded-xl py-5 text-sm h-auto whitespace-pre-wrap"
+                            placeholder="Type your message… (Enter to send, Shift+Enter for newline)"
                             value={input}
                             onChange={e => setInput(e.target.value)}
                             disabled={isSending}
+                            onKeyDown={e => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    if (input.trim() && !isSending) {
+                                        handleSend(e);
+                                    }
+                                }
+                            }}
                         />
                         <Button
                             type="submit"
