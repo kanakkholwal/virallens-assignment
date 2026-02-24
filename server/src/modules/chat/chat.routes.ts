@@ -5,8 +5,15 @@ import * as chatController from './chat.controller';
 
 const router = express.Router();
 
-// chatLimiter runs after protect so req.user is available for per-user keying
-router.post('/send', protect, chatLimiter, chatController.send);
-router.get('/history', protect, chatController.history);
+// Conversation routes 
+router.get('/history', protect, chatController.listConversations); // for assignment requirements
+router.post('/conversations', protect, chatController.createConversation);
+router.get('/conversations', protect, chatController.listConversations);
+router.delete('/conversations/:id', protect, chatController.deleteConversation);
+router.patch('/conversations/:id', protect, chatController.renameConversation);
+
+// Messaging routes
+router.post('/conversations/:id/send', protect, chatLimiter, chatController.send);
+router.get('/conversations/:id/history', protect, chatController.history);
 
 export default router;

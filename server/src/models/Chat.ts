@@ -7,6 +7,11 @@ const chatSchema = new mongoose.Schema(
             ref: 'User',
             required: true,
         },
+        conversationId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Conversation',
+            required: true,
+        },
         role: {
             type: String,
             enum: ['user', 'assistant'],
@@ -22,8 +27,7 @@ const chatSchema = new mongoose.Schema(
     }
 );
 
-// Indexed by userId and createdAt
+chatSchema.index({ conversationId: 1, createdAt: 1 });
 chatSchema.index({ userId: 1, createdAt: 1 });
 
-
-export default mongoose?.models?.Chat || mongoose.model('Chat', chatSchema)
+export default mongoose?.models?.Chat || mongoose.model('Chat', chatSchema);

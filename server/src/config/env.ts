@@ -64,6 +64,7 @@ const config = {
     },
 };
 
+// immutable config
 Object.freeze(config)
 
 export { config };

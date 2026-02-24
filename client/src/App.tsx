@@ -1,15 +1,21 @@
 import { Toaster } from '@/components/ui/sonner';
+import { Loader2 } from 'lucide-react';
 import React from 'react';
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import Chat from './pages/Chat';
+import { ChatPage } from './pages/Chat';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { token, loading } = useAuth();
-  if (loading) return <div className="flex h-screen items-center justify-center text-muted-foreground text-sm">Loading…</div>;
+
+  if (loading) return <div className="flex h-screen items-center justify-center text-muted-foreground text-sm">
+    <Loader2 className="animate-spin text-primary" />
+  </div>;
+
   if (!token) return <Navigate to="/login" />;
+
   return <>{children}</>;
 };
 
@@ -24,7 +30,7 @@ function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <Chat />
+                <ChatPage />
               </ProtectedRoute>
             }
           />

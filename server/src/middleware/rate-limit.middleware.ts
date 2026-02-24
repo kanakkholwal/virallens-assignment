@@ -1,11 +1,11 @@
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { config } from '../config/env';
 
-// Global limiter — applied to every route.
+// Global limiter
 export const globalLimiter = rateLimit({
     windowMs: config.rateLimit.global.windowMs,
     max: config.rateLimit.global.max,
-    standardHeaders: 'draft-7', // Return rate limit info in `RateLimit-*` headers
+    standardHeaders: 'draft-7',
     legacyHeaders: false,
     skipSuccessfulRequests: false,
     message: {

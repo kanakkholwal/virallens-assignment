@@ -1,5 +1,6 @@
 import { AISDKError } from 'ai';
 import Chat from '../../models/Chat';
+import Conversation from '../../models/Conversation';
 import { streamAIResponse } from '../../services/ai.service';
 
 export class RateLimitError extends Error {
@@ -21,21 +22,58 @@ const RATE_LIMIT_PHRASES = [
 const isRateLimitError = (err: unknown): boolean => {
     if (!(err instanceof Error)) return false;
     const msg = err.message.toLowerCase();
-    // OpenRouter returns 429 — AI SDK wraps it; check status code or message
     if ('statusCode' in err && (err as any).statusCode === 429) return true;
     if ('status' in err && (err as any).status === 429) return true;
     return RATE_LIMIT_PHRASES.some(phrase => msg.includes(phrase));
 };
 
+//  Conversation CRUD 
+
+export const createConversation = async (userId: string) => {
+    return await Conversation.create({ userId, title: 'New Chat' });
+};
+
+export const getConversations = async (userId: string) => {
+    return await Conversation.find({ userId }).sort({ updatedAt: -1 });
+};
+
+export const deleteConversation = async (userId: string, conversationId: string) => {
+    const conversation = await Conversation.findOneAndDelete({ _id: conversationId, userId });
+    if (!conversation) return null;
+    await Chat.deleteMany({ conversationId });
+    return conversation;
+};
+
+export const updateConversationTitle = async (
+    userId: string,
+    conversationId: string,
+    title: string,
+) => {
+    return await Conversation.findOneAndUpdate(
+        { _id: conversationId, userId },
+        { title },
+        { new: true },
+    );
+};
+
+//  Messaging 
+
 export const streamMessage = async (
     userId: string,
+    conversationId: string,
     message: string,
     onChunk: (chunk: string) => void,
     onDone: (fullText: string) => void,
     onError: (err: RateLimitError | Error) => void,
 ) => {
+    // Validate conversation belongs to user
+    const conversation = await Conversation.findOne({ _id: conversationId, userId });
+    if (!conversation) {
+        onError(new Error('Conversation not found'));
+        return;
+    }
 
-    await Chat.create({ userId, role: 'user', message });
+    await Chat.create({ userId, conversationId, role: 'user', message });
 
     try {
         const result = streamAIResponse(message);
@@ -46,7 +84,17 @@ export const streamMessage = async (
             onChunk(chunk);
         }
 
-        await Chat.create({ userId, role: 'assistant', message: fullText });
+        await Chat.create({ userId, conversationId, role: 'assistant', message: fullText });
+
+        // Auto-generate title from first user message if still "New Chat"
+        if (conversation.title === 'New Chat') {
+            const autoTitle = message.slice(0, 60).trim() + (message.length > 60 ? '…' : '');
+            await Conversation.findByIdAndUpdate(conversationId, { title: autoTitle });
+        }
+
+        // Bump updatedAt so conversations sort by last activity
+        await Conversation.findByIdAndUpdate(conversationId, { updatedAt: new Date() });
+
         onDone(fullText);
     } catch (err) {
         if (isRateLimitError(err)) {
@@ -59,6 +107,6 @@ export const streamMessage = async (
     }
 };
 
-export const getHistory = async (userId: string) => {
-    return await Chat.find({ userId }).sort({ createdAt: 1 });
+export const getHistory = async (userId: string, conversationId: string) => {
+    return await Chat.find({ userId, conversationId }).sort({ createdAt: 1 });
 };

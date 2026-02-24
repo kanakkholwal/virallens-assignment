@@ -2,18 +2,65 @@ import { NextFunction, Response } from 'express';
 import * as chatService from './chat.service';
 import { RateLimitError } from './chat.service';
 
-// Helper: write an SSE error event then close the stream.
-// We must do this (instead of next(error)) because flushHeaders() has already
-// committed us to an SSE response — HTTP status can no longer be changed.
 const sendSSEError = (res: Response, code: string, message: string) => {
     res.write(`data: ${JSON.stringify({ error: true, code, message })}\n\n`);
     res.end();
 };
 
+// Conversations - CRUD                 
+
+export const createConversation = async (req: any, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user._id;
+        const conversation = await chatService.createConversation(userId);
+        res.status(201).json(conversation);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const listConversations = async (req: any, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user._id;
+        const conversations = await chatService.getConversations(userId);
+        res.status(200).json(conversations);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deleteConversation = async (req: any, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user._id;
+        const { id } = req.params;
+        const deleted = await chatService.deleteConversation(userId, id);
+        if (!deleted) return res.status(404).json({ message: 'Conversation not found' });
+        res.status(200).json({ message: 'Conversation deleted' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const renameConversation = async (req: any, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user._id;
+        const { id } = req.params;
+        const { title } = req.body;
+        const updated = await chatService.updateConversationTitle(userId, id, title);
+        if (!updated) return res.status(404).json({ message: 'Conversation not found' });
+        res.status(200).json(updated);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Messaging                       
+
 export const send = async (req: any, res: Response, next: NextFunction) => {
     try {
         const { message } = req.body;
         const userId = req.user._id;
+        const { id: conversationId } = req.params;
 
         // Commit to SSE — no going back to HTTP errors after this point
         res.setHeader('Content-Type', 'text/event-stream');
@@ -23,6 +70,7 @@ export const send = async (req: any, res: Response, next: NextFunction) => {
 
         await chatService.streamMessage(
             userId,
+            conversationId,
             message,
             (chunk) => {
                 res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
@@ -40,7 +88,6 @@ export const send = async (req: any, res: Response, next: NextFunction) => {
             },
         );
     } catch (error) {
-        // Only reached if error occurs before flushHeaders() (e.g. bad userId)
         next(error);
     }
 };
@@ -48,7 +95,8 @@ export const send = async (req: any, res: Response, next: NextFunction) => {
 export const history = async (req: any, res: Response, next: NextFunction) => {
     try {
         const userId = req.user._id;
-        const chatHistory = await chatService.getHistory(userId);
+        const { id: conversationId } = req.params;
+        const chatHistory = await chatService.getHistory(userId, conversationId);
         res.status(200).json(chatHistory);
     } catch (error) {
         next(error);
