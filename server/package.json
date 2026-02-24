@@ -4,9 +4,9 @@
   "description": "",
   "main": "dist/src/index.js",
   "scripts": {
-    "start": "bun run dist/src/index.js --host 0.0.0.0 --port ${PORT:-8080}",
+    "start": "NODE_ENV=production bun run dist/src/index.js --host 0.0.0.0 --port ${PORT:-8080}",
     "build": "tsc",
-    "dev": "tsx watch src/index.ts",
+    "dev": "NODE_ENV=development tsx watch src/index.ts",
     "lint": "eslint src/** ",
     "lint:fix": "eslint src/**  --fix",
     "test": "echo \"Error: no test specified\" && exit 1"

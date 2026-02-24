@@ -1,0 +1,14 @@
+{
+    "name": "virallens",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "docker compose -f docker-compose.dev.yml --env-file .env.development up --build",
+        "prod": "docker compose --env-file .env.production up --build",
+        "down": "docker compose down",
+        "down:v": "docker compose down -v",
+        "server:dev": "cd server && bun run dev",
+        "client:dev": "cd client && bun run dev",
+        "install:all": "bun install && cd server && bun install && cd ../client && bun install"
+    }
+}

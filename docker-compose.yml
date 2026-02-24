@@ -15,10 +15,12 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - NODE_ENV=production
       - PORT=8080
       - MONGO_URI=mongodb://root:secret@mongo:27017/virallens?authSource=admin
       - JWT_SECRET=${JWT_SECRET}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - CORS_ORIGIN=${CORS_ORIGIN-http://localhost:4173}
     depends_on:
       - mongo
 

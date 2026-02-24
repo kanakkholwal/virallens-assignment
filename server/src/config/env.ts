@@ -2,11 +2,17 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { z } from 'zod';
 
-const nodeEnv = process.env.NODE_ENV ?? 'development';
+const nodeEnv = process.env.NODE_ENV || 'development';
 
-dotenv.config({
-    path: path.resolve(process.cwd(), nodeEnv === 'production' ? '.env' : '.env.development')
-});
+// Load environment-specific file first, fall back to .env
+const envFiles = [
+    `.env.${nodeEnv}`,
+    '.env'
+];
+
+for (const file of envFiles) {
+    dotenv.config({ path: path.resolve(process.cwd(), file) });
+}
 
 const envSchema = z.object({
     PORT: z.string().default('8080'),
@@ -21,7 +27,7 @@ const envSchema = z.object({
     CHAT_RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60 * 1000),
     CHAT_RATE_LIMIT_MAX: z.coerce.number().default(20),
 
-    CORS_ORIGIN: z.string().default('http://localhost:5173'),
+    CORS_ORIGIN: z.string().default('http://localhost:4173'),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -1,72 +1,148 @@
 # ViralLens AI Customer Support Chat System
 
-A production-quality AI customer support chat system built with React, Express, MongoDB, and OpenRouter AI.
+A production-ready, full-stack AI customer support chat application built with modern web technologies. This system provides a seamless chat experience with persistent history, secure authentication, and AI-powered responses.
 
-## Tech Stack
+---
 
-- **Frontend**: React, Vite, TypeScript, Tailwind CSS v4, Lucide Icons.
-- **Backend**: Node.js, Express, TypeScript, Mongoose, JWT, bcrypt.
-- **Database**: MongoDB.
-- **AI**: OpenRouter (Gemini 2.0 Flash Exp).
-- **DevOps**: Docker, Docker Compose.
+## 🏗️ Project Structure
 
-## Features
+```text
+virallens/
+├── client/             # React + Vite Frontend
+│   ├── src/            # Components, Hooks, Context, Services
+│   └── Dockerfile      # Frontend Production Build
+├── server/             # Node.js + Express + Bun Backend (TypeScript)
+│   ├── src/            # Controllers, Models, Routes, Services
+│   └── Dockerfile      # Backend Production Build
+├── docker-compose.yml  # Production Orchestration (w/ Mongo Auth)
+└── docker-compose.dev.yml # Development Orchestration (w/ Hot Reload)
+```
 
-- User Authentication (Signup/Login) with JWT.
-- Secure AI Chat Module (OpenRouter).
-- Optimistic UI for smooth chatting.
-- Auto-scrolling chat history.
-- Persistent Chat History in MongoDB.
-- Containerized for easy deployment.
+---
 
-## Setup Instructions
+## 🛠️ Tech Stack
 
-### Prerequisites
-- Node.js (v20+)
-- Docker and Docker Compose
-- OpenRouter API Key
+### Frontend
+- **Framework**: [React 19](https://react.dev/)
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Forms**: [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/)
+- **Animations**: [Streamdown](https://github.com/streamdown/streamdown) for AI response rendering.
 
-### Local Development
+### Backend
+- **Runtime**: [Node.js](https://nodejs.org/) / [Bun](https://bun.sh/)
+- **API Framework**: [Express](https://expressjs.com/)
+- **Database**: [MongoDB](https://www.mongodb.com/) via [Mongoose](https://mongoosejs.com/)
+- **Authentication**: [JWT](https://jwt.io/) & [bcrypt](https://github.com/kelektiv/node.bcrypt.js)
+- **AI Integration**: [OpenRouter](https://openrouter.ai/) (liquid/lfm-2.5-1.2b-instruct:free)
 
-1. **Clone the repository**
-2. **Setup Backend**:
-   - `cd server`
-   - `npm install`
-   - Create `.env` from `.env.example` and add your `OPENROUTER_API_KEY` and `JWT_SECRET`.
-   - `npm run dev`
-3. **Setup Frontend**:
-   - `cd client`
-   - `npm install`
-   - Create `.env` from `.env.example`.
-   - `npm run dev`
+---
 
-### Run with Docker
+## 🚀 Quick Start (Docker)
 
-1. Create a `.env` file in the **root** directory (or passed via environment) with:
-   ```env
-   JWT_SECRET=your_jwt_secret
-   OPENROUTER_API_KEY=your_api_key
-   ```
-2. Build and run:
-   ```bash
-   docker compose up --build
-   ```
-3. Access the app at `http://localhost`.
+The easiest way to get the system running is using Docker Compose.
 
-## API Routes
+### 1. Setup Environment
+Create a `.env` file in the **root** of the project:
 
-### Auth
-- `POST /auth/signup`: Create a new user account.
-- `POST /auth/login`: Authenticate user and receive JWT.
+```env
+JWT_SECRET=your_super_secret_key
+OPENROUTER_API_KEY=your_openrouter_api_key
+```
 
-### Chat
-- `POST /chat/send`: Send a message to AI and store history.
-- `GET /chat/history`: Retrieve user-specific chat history.
+### 2. Run the Application
 
-## Architecture Decisions
+**For Production-like environment:**
+```bash
+docker compose up --build
+```
+- Frontend: `http://localhost:4173`
+- Backend: `http://localhost:8080`
 
-- **Tailwind CSS v4**: Used for modern, fast styling without configuration overhead.
-- **Optimistic UI**: Messages are added to the UI immediately before the server responds to ensure a responsive feel.
-- **Modular Backend**: Separated into modules (auth, chat) for scalability and maintainability.
-- **Streaming**: Not used in this version for simplicity, but easily swappable in `ai.service.ts`.
-- **Docker Multi-stage Builds**: Used to minimize image size for production deployment.
+**For Development (with hot-reload):**
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+- Frontend: `http://localhost:4173`
+- Backend: `http://localhost:8080`
+
+---
+
+## 💻 Manual Local Setup
+
+If you prefer to run the services manually without Docker:
+
+### 1. Prerequisites
+- **Node.js**: v20+ or **Bun** v1.1+
+- **MongoDB**: Running locally at `mongodb://localhost:27017`
+
+### 2. Backend Setup
+```bash
+cd server
+npm install
+# or
+bun install
+
+# Configure server/.env
+cp .env.example .env
+
+# Run development server
+npm run dev
+```
+
+### 3. Frontend Setup
+```bash
+cd client
+npm install
+# or
+bun install
+
+# Configure client/.env
+cp .env.example .env
+
+# Run development server
+npm run dev
+```
+
+---
+
+## 🔑 Environment Variables
+
+### Server (`/server/.env`)
+| Variable | Description | Default |
+| :--- | :--- | :--- |
+| `PORT` | Backend server port | `8080` |
+| `MONGO_URI` | MongoDB Connection String | `mongodb://...` |
+| `JWT_SECRET` | Secret for signing JWTs | *Required* |
+| `OPENROUTER_API_KEY` | Your OpenRouter API Key | *Required* |
+| `AI_MODEL` | AI model to use | `liquid/lfm-2.5-1.2b-instruct:free` |
+
+### Client (`/client/.env`)
+| Variable | Description | Default |
+| :--- | :--- | :--- |
+| `VITE_API_BASE_URL` | Backend API URL | `http://localhost:8080` |
+
+---
+
+## 📡 API Overview
+
+### Documentation & Endpoints
+
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/auth/signup` | Register a new user | No |
+| `POST` | `/auth/login` | Login and get JWT token | No |
+| `GET` | `/chat/history`| Fetch chat history | Yes |
+| `POST` | `/chat/send` | Send message to AI | Yes |
+
+---
+
+## ✨ Features & Design Choices
+
+- **Optimistic UI Updates**: Chat messages appear instantly in the UI for a snappy feel, sync with backend happens in the background.
+- **Auto-scroll Experience**: Chat automatically scrolls to the latest message.
+- **Robust Authentication**: Secure password hashing with bcrypt and token-based sessions with JWT.
+- **Rate Limiting**: Backend protected by IP-based rate limits to prevent AI API abuse.
+- **Responsive Design**: Fully responsive UI tailored for both desktop and mobile users.
+- **Modern Styling**: Leveraging Tailwind CSS v4's latest features for a clean, professional look.
